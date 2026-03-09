@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — The Anti-Loan</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">↑$</span>
+      The Anti-Loan
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="history.html" class="nav-link">History</a>
+    </div>
+    <div class="nav-right">
+      <button id="btn-reset" class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem;color:var(--text-muted)">
+        Reset
+      </button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Portfolio Value</div>
+        <div class="stat-value accent" id="stat-portfolio">—</div>
+        <div class="stat-sub" id="stat-portfolio-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Monthly Income</div>
+        <div class="stat-value green" id="stat-monthly">—</div>
+        <div class="stat-sub" id="stat-monthly-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Working Balance</div>
+        <div class="stat-value gold" id="stat-working">—</div>
+        <div class="stat-sub">Available to spend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Return</div>
+        <div class="stat-value" id="stat-return">—</div>
+        <div class="stat-sub" id="stat-return-sub">—</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: Chart + Actions -->
+    <div class="dashboard-grid">
+
+      <!-- LEFT: Chart -->
+      <div>
+        <div class="card">
+          <div class="section-header">
+            <span class="section-title" id="chart-title">36-Month Portfolio Projection</span>
+            <div style="display:flex;gap:1rem;font-size:0.75rem;color:var(--text-muted)">
+              <span style="display:flex;align-items:center;gap:0.4rem">
+                <span style="width:12px;height:3px;background:var(--accent);border-radius:2px;display:inline-block"></span>
+                Projected
+              </span>
+              <span style="display:flex;align-items:center;gap:0.4rem">
+                <span style="width:12px;height:3px;background:var(--green);border-radius:2px;display:inline-block"></span>
+                Actual
+              </span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="portfolio-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Sustainability indicator -->
+        <div class="sustain-wrap" style="margin-top:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+            <span style="font-size:0.78rem;font-weight:600;color:var(--text-secondary)">Portfolio Sustainability</span>
+            <span class="sustain-text" id="sustain-label">—</span>
+          </div>
+          <div class="sustain-bar-track">
+            <div class="sustain-bar-fill" id="sustain-bar" style="width:0%"></div>
+          </div>
+          <div id="sustain-detail" style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem;">—</div>
+        </div>
+
+        <!-- Simulation month counter -->
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+          <span>Months simulated: <strong id="months-count" style="color:var(--text-secondary)">0</strong></span>
+          <span>·</span>
+          <span>Total deposited: <strong id="total-deposited" style="color:var(--text-secondary)">—</strong></span>
+          <span>·</span>
+          <span>Total paid out: <strong id="total-paid-out" style="color:var(--green)">—</strong></span>
+        </div>
+      </div>
+
+      <!-- RIGHT: Actions + Settings -->
+      <div>
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="section-title" style="margin-bottom:1rem;">Actions</div>
+          <div style="display:flex;flex-direction:column;gap:0.6rem;">
+
+            <button class="action-btn" id="btn-simulate">
+              <span class="action-icon blue">▶</span>
+              <span class="action-text">
+                <span class="action-title">Simulate Next Month</span>
+                <span class="action-desc" id="simulate-desc">Apply market growth + collect income</span>
+              </span>
+            </button>
+
+            <button class="action-btn" id="btn-deposit">
+              <span class="action-icon green">+</span>
+              <span class="action-text">
+                <span class="action-title">Add Funds</span>
+                <span class="action-desc">Deposit more into your portfolio</span>
+              </span>
+            </button>
+
+            <button class="action-btn" id="btn-spend">
+              <span class="action-icon gold">↓</span>
+              <span class="action-text">
+                <span class="action-title">Spend Working Balance</span>
+                <span class="action-desc" id="spend-desc">Available: $0.00</span>
+              </span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Settings collapse -->
+        <button class="settings-toggle" id="settings-toggle">
+          <span>⚙ Settings</span>
+          <span class="arrow">▾</span>
+        </button>
+        <div class="settings-content" id="settings-content">
+          <form id="settings-form" novalidate>
+            <div class="form-group" style="margin-top:0.25rem;">
+              <label class="form-label" for="settings-wr">Withdrawal rate (% / year)</label>
+              <div class="input-suffix-wrap">
+                <span class="suffix">%</span>
+                <input class="form-input" type="number" id="settings-wr" min="0.1" max="99" step="0.1" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="settings-ar">Expected annual return (%)</label>
+              <div class="input-suffix-wrap">
+                <span class="suffix">%</span>
+                <input class="form-input" type="number" id="settings-ar" min="0.1" max="99" step="0.1" />
+              </div>
+            </div>
+            <div id="settings-warn" style="display:none;font-size:0.78rem;color:var(--gold);background:var(--gold-dim);padding:0.5rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.75rem;">
+              ⚠ Withdrawal rate ≥ expected return — portfolio will shrink over time.
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:0.25rem;">Save Settings</button>
+          </form>
+        </div>
+
+        <!-- Quick link to history -->
+        <a href="history.html" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem;color:var(--text-muted);font-size:0.82rem;text-decoration:none;margin-top:0.75rem;transition:color 0.2s;">
+          View transaction history →
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: Add Funds -->
+  <div class="modal-overlay" id="modal-deposit">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Add Funds</span>
+        <button class="modal-close" data-close="modal-deposit">✕</button>
+      </div>
+      <form id="deposit-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="deposit-amount">Amount to deposit</label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input class="form-input" type="number" id="deposit-amount" placeholder="1,000" min="0.01" step="any" required />
+          </div>
+          <p class="form-hint">Funds will be added to your portfolio immediately.</p>
+        </div>
+        <div id="deposit-preview" style="display:none;background:var(--green-dim);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius-sm);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--green);"></div>
+        <button type="submit" class="btn btn-green btn-full">Deposit →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Spend -->
+  <div class="modal-overlay" id="modal-spend">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Spend Working Balance</span>
+        <button class="modal-close" data-close="modal-spend">✕</button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:0.82rem;color:var(--text-muted)">Available balance</span>
+        <span style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;color:var(--gold);" id="modal-working-bal">—</span>
+      </div>
+      <form id="spend-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="spend-amount">Amount to withdraw</label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input class="form-input" type="number" id="spend-amount" placeholder="100" min="0.01" step="any" required />
+          </div>
+          <p class="form-hint">This reduces your working balance only — your portfolio is unaffected.</p>
+        </div>
+        <div id="spend-error" style="display:none;font-size:0.78rem;color:var(--red);background:var(--red-dim);padding:0.5rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.75rem;"></div>
+        <button type="submit" class="btn btn-full" style="background:var(--gold);color:#1a1000;font-weight:700;">Withdraw →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Reset Confirm -->
+  <div class="modal-overlay" id="modal-reset">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Reset simulation?</span>
+        <button class="modal-close" data-close="modal-reset">✕</button>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;">
+        This will erase all your simulation data including portfolio value, working balance, and transaction history. This cannot be undone.
+      </p>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn btn-ghost btn-full" data-close="modal-reset">Cancel</button>
+        <button class="btn btn-full" id="btn-confirm-reset" style="background:var(--red);color:white;">Yes, Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/state.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    'use strict';
+
+    if (!Utils.guardSetup()) { /* redirected */ }
+
+    let state = AppState.get();
+    let chart = null;
+
+    // ── RENDER ────────────────────────────────────────────────
+    function render() {
+      const { portfolio, workingBalance, setup, simulatedMonths } = state;
+
+      // Stats
+      const monthly = Simulation.calcMonthlyPayout(portfolio.value, setup.withdrawalRate);
+      const netReturn = portfolio.value - portfolio.totalDeposited + workingBalance;
+      const annualIncome = monthly * 12;
+
+      document.getElementById('stat-portfolio').textContent = Utils.fmt(portfolio.value);
+      document.getElementById('stat-portfolio-sub').textContent =
+        `${Utils.fmtPct(setup.annualReturn)} expected return`;
+
+      document.getElementById('stat-monthly').textContent = Utils.fmt(monthly);
+      document.getElementById('stat-monthly-sub').textContent =
+        `${Utils.fmt(annualIncome)} / year`;
+
+      document.getElementById('stat-working').textContent = Utils.fmt(workingBalance);
+
+      const retEl = document.getElementById('stat-return');
+      retEl.textContent = (netReturn >= 0 ? '+' : '') + Utils.fmt(netReturn);
+      retEl.className = 'stat-value ' + (netReturn >= 0 ? 'green' : 'text-red');
+      document.getElementById('stat-return-sub').textContent =
+        `vs $${Utils.fmt(portfolio.totalDeposited, 0)} deposited`;
+
+      // Footer counters
+      document.getElementById('months-count').textContent = simulatedMonths;
+      document.getElementById('total-deposited').textContent = Utils.fmt(portfolio.totalDeposited);
+      document.getElementById('total-paid-out').textContent = Utils.fmt(portfolio.totalWithdrawn || 0);
+
+      // Spend button desc
+      document.getElementById('spend-desc').textContent =
+        'Available: ' + Utils.fmt(workingBalance);
+
+      // Simulate button desc
+      document.getElementById('simulate-desc').textContent =
+        `Next payout: ~${Utils.fmt(monthly)} → working balance`;
+
+      // Sustainability
+      renderSustainability();
+
+      // Chart
+      renderChart();
+    }
+
+    // ── SUSTAINABILITY ─────────────────────────────────────────
+    function renderSustainability() {
+      const { withdrawalRate, annualReturn } = state.setup;
+      const sustainable = withdrawalRate < annualReturn;
+      const ratio = Math.min(withdrawalRate / Math.max(annualReturn, 0.01), 2);
+      const score = Math.max(0, 1 - ratio / 2);
+
+      const bar = document.getElementById('sustain-bar');
+      bar.style.width = (score * 100) + '%';
+      bar.style.background = sustainable ? 'var(--green)' : 'var(--red)';
+
+      const labelEl = document.getElementById('sustain-label');
+      if (sustainable) {
+        const netGrowth = annualReturn - withdrawalRate;
+        labelEl.textContent = '✓ Sustainable';
+        labelEl.className = 'sustain-text text-green';
+        document.getElementById('sustain-detail').textContent =
+          `Portfolio grows ~${Utils.fmtPct(netGrowth, 1)} net per year after payouts.`;
+      } else {
+        labelEl.textContent = '⚠ Unsustainable';
+        labelEl.className = 'sustain-text text-red';
+        document.getElementById('sustain-detail').textContent =
+          `Withdrawal rate exceeds return — portfolio will eventually deplete.`;
+      }
+    }
+
+    // ── CHART ──────────────────────────────────────────────────
+    function renderChart() {
+      const { portfolio, setup, simulatedMonths, transactions } = state;
+
+      // Build actual history from transactions (portfolio value snapshots)
+      const actualLabels = [];
+      const actualValues = [];
+      const payoutTxs = transactions.filter(t => t.type === 'payout' || t.type === 'deposit');
+
+      // Start point
+      actualLabels.push('Start');
+      actualValues.push(transactions[0]?.portfolioValueAfter ?? portfolio.value);
+
+      transactions.filter(t => t.type === 'payout').forEach((t, i) => {
+        actualLabels.push('M' + (i + 1));
+        actualValues.push(t.portfolioValueAfter);
+      });
+
+      // Projection: from current value, show next 36 months
+      const projMonths = 36;
+      const projData = Simulation.project(portfolio.value, setup.annualReturn, setup.withdrawalRate, projMonths);
+
+      // Merge: actual points + projected continuation
+      const allLabels = [...actualLabels];
+      const allActual = [...actualValues];
+      const allProjected = new Array(actualValues.length).fill(null);
+
+      // Projected picks up at "now"
+      allProjected[allProjected.length - 1] = portfolio.value; // connect lines
+
+      projData.slice(1).forEach((d, i) => {
+        allLabels.push('M' + (simulatedMonths + i + 1));
+        allActual.push(null);
+        allProjected.push(d.value);
+      });
+
+      const ctx = document.getElementById('portfolio-chart').getContext('2d');
+
+      const gradientAccent = ctx.createLinearGradient(0, 0, 0, 260);
+      gradientAccent.addColorStop(0, 'rgba(79,110,247,0.18)');
+      gradientAccent.addColorStop(1, 'rgba(79,110,247,0)');
+
+      const gradientGreen = ctx.createLinearGradient(0, 0, 0, 260);
+      gradientGreen.addColorStop(0, 'rgba(34,197,94,0.15)');
+      gradientGreen.addColorStop(1, 'rgba(34,197,94,0)');
+
+      const chartData = {
+        labels: allLabels,
+        datasets: [
+          {
+            label: 'Actual',
+            data: allActual,
+            borderColor: '#22c55e',
+            backgroundColor: gradientGreen,
+            fill: true,
+            tension: 0.3,
+            pointRadius: (ctx) => ctx.dataIndex === allActual.length - 1 - (projMonths) ? 4 : 2,
+            pointHoverRadius: 5,
+            borderWidth: 2.5,
+            spanGaps: false,
+          },
+          {
+            label: 'Projected',
+            data: allProjected,
+            borderColor: '#4f6ef7',
+            backgroundColor: gradientAccent,
+            fill: true,
+            tension: 0.3,
+            borderDash: [5, 4],
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            borderWidth: 2,
+            spanGaps: false,
+          },
+        ],
+      };
+
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(20,27,45,0.95)',
+            borderColor: 'rgba(30,38,64,0.8)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (ctx) => {
+                if (ctx.parsed.y === null) return null;
+                return ` ${ctx.dataset.label}: ${Utils.fmt(ctx.parsed.y)}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(28,38,64,0.6)', drawBorder: false },
+            ticks: { color: '#4a5878', font: { size: 10 }, maxTicksLimit: 12 },
+          },
+          y: {
+            grid: { color: 'rgba(28,38,64,0.6)', drawBorder: false },
+            ticks: {
+              color: '#4a5878', font: { size: 10 },
+              callback: (v) => {
+                if (v >= 1_000_000) return '$' + (v/1_000_000).toFixed(1) + 'M';
+                if (v >= 1_000) return '$' + (v/1_000).toFixed(0) + 'k';
+                return '$' + v.toFixed(0);
+              },
+            },
+          },
+        },
+      };
+
+      if (chart) {
+        chart.data = chartData;
+        chart.options = chartOptions;
+        chart.update('none');
+      } else {
+        chart = new Chart(ctx, { type: 'line', data: chartData, options: chartOptions });
+      }
+
+      // Update chart title
+      document.getElementById('chart-title').textContent =
+        simulatedMonths === 0
+          ? '36-Month Portfolio Projection'
+          : `${simulatedMonths} Month${simulatedMonths !== 1 ? 's' : ''} Simulated + 36-Month Outlook`;
+    }
+
+    // ── ACTIONS ────────────────────────────────────────────────
+
+    // Simulate month
+    document.getElementById('btn-simulate').addEventListener('click', () => {
+      const { newState, payout, growth } = Simulation.simulateMonth(state);
+      state = newState;
+      render();
+      Utils.toast(
+        `Month ${state.simulatedMonths}: +${Utils.fmt(payout)} to working balance · +${Utils.fmt(growth)} market growth`,
+        'success'
+      );
+    });
+
+    // Add funds
+    document.getElementById('btn-deposit').addEventListener('click', () => {
+      document.getElementById('deposit-amount').value = '';
+      document.getElementById('deposit-preview').style.display = 'none';
+      Utils.openModal('modal-deposit');
+    });
+
+    document.getElementById('deposit-amount').addEventListener('input', function () {
+      const amt = parseFloat(this.value) || 0;
+      const preview = document.getElementById('deposit-preview');
+      if (amt > 0) {
+        const newVal = state.portfolio.value + amt;
+        const newMonthly = Simulation.calcMonthlyPayout(newVal, state.setup.withdrawalRate);
+        preview.style.display = 'block';
+        preview.textContent =
+          `New portfolio: ${Utils.fmt(newVal)} · Monthly income: ${Utils.fmt(newMonthly)}`;
+      } else {
+        preview.style.display = 'none';
+      }
+    });
+
+    document.getElementById('deposit-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('deposit-amount').value);
+      if (!amount || amount <= 0) return;
+      state = Simulation.deposit(state, amount);
+      render();
+      Utils.closeModal('modal-deposit');
+      Utils.toast(`${Utils.fmt(amount)} added to portfolio`, 'success');
+    });
+
+    // Spend
+    document.getElementById('btn-spend').addEventListener('click', () => {
+      document.getElementById('spend-amount').value = '';
+      document.getElementById('spend-error').style.display = 'none';
+      document.getElementById('modal-working-bal').textContent = Utils.fmt(state.workingBalance);
+      Utils.openModal('modal-spend');
+    });
+
+    document.getElementById('spend-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const errEl = document.getElementById('spend-error');
+      const amount = parseFloat(document.getElementById('spend-amount').value);
+
+      if (!amount || amount <= 0) {
+        errEl.textContent = 'Please enter a valid amount.';
+        errEl.style.display = 'block'; return;
+      }
+      if (amount > state.workingBalance) {
+        errEl.textContent = `Insufficient balance. You have ${Utils.fmt(state.workingBalance)} available.`;
+        errEl.style.display = 'block'; return;
+      }
+
+      const newState = Simulation.spend(state, amount);
+      if (!newState) return;
+      state = newState;
+      render();
+      Utils.closeModal('modal-spend');
+      Utils.toast(`${Utils.fmt(amount)} withdrawn from working balance`, 'success');
+    });
+
+    // Settings
+    document.getElementById('settings-toggle').addEventListener('click', function () {
+      this.classList.toggle('open');
+      document.getElementById('settings-content').classList.toggle('open');
+      // Pre-fill on open
+      if (this.classList.contains('open')) {
+        document.getElementById('settings-wr').value = state.setup.withdrawalRate;
+        document.getElementById('settings-ar').value = state.setup.annualReturn;
+        checkSettingsWarn();
+      }
+    });
+
+    function checkSettingsWarn() {
+      const wr = parseFloat(document.getElementById('settings-wr').value) || 0;
+      const ar = parseFloat(document.getElementById('settings-ar').value) || 0;
+      document.getElementById('settings-warn').style.display = wr >= ar ? 'block' : 'none';
+    }
+
+    document.getElementById('settings-wr').addEventListener('input', checkSettingsWarn);
+    document.getElementById('settings-ar').addEventListener('input', checkSettingsWarn);
+
+    document.getElementById('settings-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const wr = parseFloat(document.getElementById('settings-wr').value);
+      const ar = parseFloat(document.getElementById('settings-ar').value);
+      if (!wr || !ar || wr <= 0 || ar <= 0) return;
+      state = Simulation.updateSettings(state, { withdrawalRate: wr, annualReturn: ar });
+      render();
+      Utils.toast('Settings updated', 'success');
+      document.getElementById('settings-toggle').classList.remove('open');
+      document.getElementById('settings-content').classList.remove('open');
+    });
+
+    // Reset
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      Utils.openModal('modal-reset');
+    });
+    document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+      AppState.reset();
+      window.location.href = 'index.html';
+    });
+
+    // Close modals
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => Utils.closeModal(btn.dataset.close));
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === this) Utils.closeModal(this.id);
+      });
+    });
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

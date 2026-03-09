@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Anti-Loan — Everyone Can Cash Flow</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="landing-bg">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">↑$</span>
+      The Anti-Loan
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link" id="nav-dashboard" style="display:none">Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="landing-hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Proof of Concept
+    </div>
+    <h1 class="hero-title">
+      Everyone can<br>
+      <span class="green">cash flow</span>
+    </h1>
+    <p class="hero-subtitle">
+      Instead of borrowing money and paying interest, invest your money and
+      collect a monthly income — sustainably, for as long as your portfolio lives.
+      No loans. No debt. Just <span style="color:var(--text)">compounding in your favor.</span>
+    </p>
+    <div class="hero-cta">
+      <a href="#setup" class="btn btn-primary btn-lg">Get Started →</a>
+    </div>
+    <p class="hero-note">Simulation only — no real money, no accounts needed</p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-it-works">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-title">Deposit funds</div>
+      <p class="step-desc">Transfer any amount — even a small one. Your money is invested in a diversified fund and starts working immediately.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-title">Earn monthly income</div>
+      <p class="step-desc">Each month, a small percentage flows from your portfolio into your working balance. Set a rate low enough and it lasts forever.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-title">Spend freely</div>
+      <p class="step-desc">Withdraw from your working balance whenever you like. Meanwhile your portfolio keeps growing, replenishing the next month's payout.</p>
+    </div>
+  </div>
+
+  <!-- SETUP FORM -->
+  <section class="setup-section" id="setup">
+    <div class="setup-card">
+      <h2 class="setup-card-title">Start your simulation</h2>
+      <p class="setup-card-sub">Configure your portfolio to see how the Anti-Loan works for you.</p>
+
+      <form id="setup-form" novalidate>
+
+        <!-- Initial deposit -->
+        <div class="form-group">
+          <label class="form-label" for="deposit">Initial deposit</label>
+          <div class="input-prefix-wrap">
+            <span class="prefix">$</span>
+            <input
+              class="form-input" type="number" id="deposit"
+              placeholder="5,000" min="1" step="any" required
+            />
+          </div>
+          <p class="form-hint">The amount you're investing to start.</p>
+        </div>
+
+        <!-- Rates row -->
+        <div class="rates-row">
+          <div class="form-group">
+            <label class="form-label" for="withdrawal-rate">Withdrawal rate</label>
+            <div class="input-suffix-wrap">
+              <span class="suffix">% / yr</span>
+              <input
+                class="form-input" type="number" id="withdrawal-rate"
+                placeholder="4" value="4" min="0.1" max="99" step="0.1" required
+              />
+            </div>
+            <p class="form-hint">Annual % taken out as income.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="annual-return">Expected return</label>
+            <div class="input-suffix-wrap">
+              <span class="suffix">% / yr</span>
+              <input
+                class="form-input" type="number" id="annual-return"
+                placeholder="7" value="7" min="0.1" max="99" step="0.1" required
+              />
+            </div>
+            <p class="form-hint">Annual market growth estimate.</p>
+          </div>
+        </div>
+
+        <!-- Live payout preview -->
+        <div class="payout-preview" id="payout-preview">
+          <div>
+            <div class="payout-preview-label">Estimated monthly income</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">Based on your inputs</div>
+          </div>
+          <div class="payout-preview-value" id="preview-amount">$0.00</div>
+        </div>
+
+        <!-- Error message -->
+        <div id="form-error" style="display:none;color:var(--red);font-size:0.82rem;margin-bottom:1rem;padding:0.6rem 0.9rem;background:var(--red-dim);border-radius:var(--radius-sm);"></div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="start-btn">
+          Launch my Anti-Loan →
+        </button>
+
+      </form>
+    </div>
+  </section>
+
+  <script src="js/state.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    'use strict';
+
+    // If already set up, show dashboard link and optionally redirect
+    (function () {
+      const s = AppState.get();
+      if (s) {
+        document.getElementById('nav-dashboard').style.display = 'inline-flex';
+      }
+    })();
+
+    // Live payout preview
+    function updatePreview() {
+      const dep = parseFloat(document.getElementById('deposit').value) || 0;
+      const wr  = parseFloat(document.getElementById('withdrawal-rate').value) || 4;
+      const monthly = dep * (wr / 100 / 12);
+      document.getElementById('preview-amount').textContent = Utils.fmt(monthly);
+    }
+
+    document.getElementById('deposit').addEventListener('input', updatePreview);
+    document.getElementById('withdrawal-rate').addEventListener('input', updatePreview);
+    updatePreview();
+
+    // Form submission
+    document.getElementById('setup-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const errEl = document.getElementById('form-error');
+      errEl.style.display = 'none';
+
+      const deposit        = parseFloat(document.getElementById('deposit').value);
+      const withdrawalRate = parseFloat(document.getElementById('withdrawal-rate').value);
+      const annualReturn   = parseFloat(document.getElementById('annual-return').value);
+
+      if (!deposit || deposit <= 0) {
+        errEl.textContent = 'Please enter a valid deposit amount greater than $0.';
+        errEl.style.display = 'block'; return;
+      }
+      if (!withdrawalRate || withdrawalRate <= 0) {
+        errEl.textContent = 'Please enter a valid withdrawal rate.';
+        errEl.style.display = 'block'; return;
+      }
+      if (!annualReturn || annualReturn <= 0) {
+        errEl.textContent = 'Please enter a valid expected annual return.';
+        errEl.style.display = 'block'; return;
+      }
+      if (withdrawalRate >= annualReturn) {
+        // Allow but warn
+      }
+
+      const btn = document.getElementById('start-btn');
+      btn.textContent = 'Setting up…';
+      btn.disabled = true;
+
+      AppState.init({ deposit, withdrawalRate, annualReturn });
+
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 300);
+    });
+  </script>
+</body>
+</html>

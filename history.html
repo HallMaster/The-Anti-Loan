@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History — The Anti-Loan</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">↑$</span>
+      The Anti-Loan
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="history.html" class="nav-link active">History</a>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- Summary cards -->
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 1.5rem;">
+      <div class="stat-card">
+        <div class="stat-label">Total Deposited</div>
+        <div class="stat-value accent" id="sum-deposited">—</div>
+        <div class="stat-sub" id="sum-deposit-count">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Income Earned</div>
+        <div class="stat-value green" id="sum-income">—</div>
+        <div class="stat-sub" id="sum-income-count">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value gold" id="sum-spent">—</div>
+        <div class="stat-sub" id="sum-spent-count">—</div>
+      </div>
+    </div>
+
+    <!-- Filter row -->
+    <div class="card">
+      <div class="section-header">
+        <span class="section-title">Transaction History</span>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn btn-ghost filter-btn active" data-filter="all" style="font-size:0.78rem;padding:0.3rem 0.75rem;">All</button>
+          <button class="btn btn-ghost filter-btn" data-filter="deposit" style="font-size:0.78rem;padding:0.3rem 0.75rem;">Deposits</button>
+          <button class="btn btn-ghost filter-btn" data-filter="payout" style="font-size:0.78rem;padding:0.3rem 0.75rem;">Payouts</button>
+          <button class="btn btn-ghost filter-btn" data-filter="spend" style="font-size:0.78rem;padding:0.3rem 0.75rem;">Withdrawals</button>
+        </div>
+      </div>
+
+      <div id="empty-state" class="empty-state" style="display:none;">
+        <h3>No transactions yet</h3>
+        <p style="font-size:0.82rem;">Simulate a few months on the dashboard to see your history here.</p>
+      </div>
+
+      <div class="table-wrapper" id="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Portfolio After</th>
+              <th>Working Balance After</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tx-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Back to dashboard -->
+    <div style="text-align:center;margin-top:2rem;">
+      <a href="dashboard.html" class="btn btn-ghost">← Back to Dashboard</a>
+    </div>
+
+  </main>
+
+  <script src="js/state.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    'use strict';
+
+    if (!Utils.guardSetup()) { /* redirected */ }
+
+    const state = AppState.get();
+    let currentFilter = 'all';
+
+    // ── SUMMARY STATS ──────────────────────────────────────────
+    function renderSummary() {
+      const txs = state.transactions;
+
+      const deposits = txs.filter(t => t.type === 'deposit');
+      const payouts  = txs.filter(t => t.type === 'payout');
+      const spends   = txs.filter(t => t.type === 'spend');
+
+      const totalDeposited = deposits.reduce((s, t) => s + t.amount, 0);
+      const totalIncome    = payouts.reduce((s, t) => s + t.amount, 0);
+      const totalSpent     = spends.reduce((s, t) => s + Math.abs(t.amount), 0);
+
+      document.getElementById('sum-deposited').textContent = Utils.fmt(totalDeposited);
+      document.getElementById('sum-deposit-count').textContent =
+        deposits.length + ' deposit' + (deposits.length !== 1 ? 's' : '');
+
+      document.getElementById('sum-income').textContent = Utils.fmt(totalIncome);
+      document.getElementById('sum-income-count').textContent =
+        payouts.length + ' monthly payout' + (payouts.length !== 1 ? 's' : '');
+
+      document.getElementById('sum-spent').textContent = Utils.fmt(totalSpent);
+      document.getElementById('sum-spent-count').textContent =
+        spends.length + ' withdrawal' + (spends.length !== 1 ? 's' : '');
+    }
+
+    // ── TRANSACTION TABLE ──────────────────────────────────────
+    function renderTable(filter) {
+      const allTxs = [...state.transactions].reverse();
+      const txs = filter === 'all' ? allTxs : allTxs.filter(t => t.type === filter);
+
+      const tbody = document.getElementById('tx-tbody');
+
+      if (txs.length === 0) {
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('table-wrap').style.display = 'none';
+        return;
+      }
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('table-wrap').style.display = 'block';
+
+      const typeConfig = {
+        deposit: { label: 'Deposit',     badge: 'badge-blue',  sign: '+' },
+        payout:  { label: 'Income',      badge: 'badge-green', sign: '+' },
+        spend:   { label: 'Withdrawal',  badge: 'badge-gold',  sign: '' },
+      };
+
+      tbody.innerHTML = txs.map(tx => {
+        const cfg    = typeConfig[tx.type] || { label: tx.type, badge: 'badge-blue', sign: '' };
+        const absAmt = Math.abs(tx.amount);
+        const amtClass = tx.amount >= 0 ? 'text-green' : 'text-red';
+        const amtStr = tx.amount > 0 ? `+${Utils.fmt(absAmt)}` : `-${Utils.fmt(absAmt)}`;
+
+        // Extra info for payouts
+        let notes = tx.description || '—';
+        if (tx.type === 'payout' && tx.growth != null) {
+          notes = `Market growth: +${Utils.fmt(tx.growth)}`;
+        }
+
+        return `
+          <tr class="tx-row" data-type="${tx.type}">
+            <td style="color:var(--text-secondary);font-size:0.82rem;white-space:nowrap;">${Utils.fmtDate(tx.date)}</td>
+            <td><span class="badge ${cfg.badge}">${cfg.label}</span></td>
+            <td class="${amtClass} font-mono" style="font-size:0.9rem;font-weight:600;">${amtStr}</td>
+            <td class="font-mono" style="font-size:0.875rem;">${Utils.fmt(tx.portfolioValueAfter)}</td>
+            <td class="font-mono" style="font-size:0.875rem;">${Utils.fmt(tx.workingBalanceAfter)}</td>
+            <td style="font-size:0.78rem;color:var(--text-muted);">${notes}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ── FILTER BUTTONS ─────────────────────────────────────────
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        this.style.color = 'var(--accent)';
+        document.querySelectorAll('.filter-btn:not(.active)').forEach(b => {
+          b.style.color = '';
+        });
+        currentFilter = this.dataset.filter;
+        renderTable(currentFilter);
+      });
+    });
+
+    // Style the active filter button
+    document.querySelectorAll('.filter-btn.active').forEach(b => {
+      b.style.color = 'var(--accent)';
+      b.style.borderColor = 'var(--accent)';
+    });
+
+    // Initial render
+    renderSummary();
+    renderTable('all');
+  </script>
+</body>
+</html>
