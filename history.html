@@ -18,6 +18,9 @@
       <a href="dashboard.html" class="nav-link">Dashboard</a>
       <a href="history.html" class="nav-link active">History</a>
     </div>
+    <div>
+      <span id="demo-badge" style="display:none;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:var(--gold-dim);color:var(--gold);padding:0.25rem 0.65rem;border-radius:100px;border:1px solid rgba(245,158,11,0.25);">Demo: Rachel</span>
+    </div>
   </nav>
 
   <main class="main">
@@ -184,6 +187,11 @@
       b.style.color = 'var(--accent)';
       b.style.borderColor = 'var(--accent)';
     });
+
+    // Show demo badge if Rachel's demo data
+    if (state.transactions && state.transactions[0] && state.transactions[0].id === 'rachel1001') {
+      document.getElementById('demo-badge').style.display = 'inline-flex';
+    }
 
     // Initial render
     renderSummary();

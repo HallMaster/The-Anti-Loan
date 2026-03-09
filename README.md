@@ -29,6 +29,18 @@ The math: if your withdrawal rate is lower than your expected return, the portfo
 
 ---
 
+## Demo data
+
+The landing page includes a **"See Rachel's Demo"** button that pre-loads a realistic 3-year simulation:
+
+- Started with **$5,000** in January 2023
+- **11% annual return**, **7.5% annual withdrawal rate**
+- Made 6 additional contributions over 3 years ($500 → $800 → $2,000 → $750 → $1,500 → $800)
+- Spent from her working balance 5 times (weekend trip, laptop, holiday gifts, home repair, birthday dinner)
+- Current portfolio: **$12,430** · Working balance: **$814** · Total income earned: **$2,214**
+
+---
+
 ## File structure
 
 ```

@@ -36,8 +36,24 @@
     </p>
     <div class="hero-cta">
       <a href="#setup" class="btn btn-primary btn-lg">Get Started →</a>
+      <button onclick="loadDemo()" class="btn btn-ghost btn-lg" id="demo-btn">
+        See Rachel's Demo
+      </button>
     </div>
     <p class="hero-note">Simulation only — no real money, no accounts needed</p>
+
+    <!-- Demo context card -->
+    <div style="display:inline-block;margin-top:1.5rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.5rem;text-align:left;max-width:480px;">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:0.6rem;">📊 Demo: Rachel's 3-Year Story</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;font-size:0.82rem;">
+        <div><span style="color:var(--text-muted)">Started with</span><br><strong style="color:var(--text)">$5,000</strong> in Jan 2023</div>
+        <div><span style="color:var(--text-muted)">Additional deposits</span><br><strong style="color:var(--text)">6 contributions</strong> over 3 yrs</div>
+        <div><span style="color:var(--text-muted)">Portfolio today</span><br><strong style="color:var(--green)">$12,430</strong></div>
+        <div><span style="color:var(--text-muted)">Income earned</span><br><strong style="color:var(--green)">$2,214</strong> total</div>
+        <div><span style="color:var(--text-muted)">Monthly income now</span><br><strong style="color:var(--accent)">~$77/mo</strong></div>
+        <div><span style="color:var(--text-muted)">Working balance</span><br><strong style="color:var(--gold)">$814</strong> ready to spend</div>
+      </div>
+    </div>
   </section>
 
   <!-- HOW IT WORKS -->
@@ -129,6 +145,7 @@
   <script src="js/state.js"></script>
   <script src="js/simulation.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/demo.js"></script>
   <script>
     'use strict';
 

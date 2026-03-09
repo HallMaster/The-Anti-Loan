@@ -20,6 +20,7 @@
       <a href="history.html" class="nav-link">History</a>
     </div>
     <div class="nav-right">
+      <span id="demo-badge" style="display:none;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:var(--gold-dim);color:var(--gold);padding:0.25rem 0.65rem;border-radius:100px;border:1px solid rgba(245,158,11,0.25);">Demo: Rachel</span>
       <button id="btn-reset" class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem;color:var(--text-muted)">
         Reset
       </button>
@@ -570,6 +571,11 @@
         if (e.target === this) Utils.closeModal(this.id);
       });
     });
+
+    // Show demo badge if this is Rachel's demo data
+    if (state.transactions && state.transactions[0] && state.transactions[0].id === 'rachel1001') {
+      document.getElementById('demo-badge').style.display = 'inline-flex';
+    }
 
     // Initial render
     render();
