@@ -2,9 +2,11 @@
 
 > **Everyone can cash flow.**
 
-A proof-of-concept web app that simulates investing a lump sum and collecting a monthly income from it — sustainably, potentially forever.
+A proof-of-concept web app that simulates investing a lump sum and collecting a monthly income from it — sustainably, potentially forever. Access the app can be accessed here: https://hallmaster.github.io/The-Anti-Loan/
 
 Instead of borrowing money and paying interest, you invest money and *receive* interest. Set your withdrawal rate below your expected market return, and your portfolio can pay you indefinitely.
+
+This app was built with the assistance of Claude AI.
 
 ---
 
