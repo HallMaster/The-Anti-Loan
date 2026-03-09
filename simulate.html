@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scenarios — The Anti-Loan</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">
+      <span class="logo-icon">↑$</span>
+      The Anti-Loan
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="simulate.html"  class="nav-link active">Scenarios</a>
+      <a href="history.html"   class="nav-link">History</a>
+    </div>
+    <div class="nav-right">
+      <span id="demo-badge" style="display:none;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:var(--gold-dim);color:var(--gold);padding:0.25rem 0.65rem;border-radius:100px;border:1px solid rgba(245,158,11,0.25);">Demo: Rachel</span>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- PAGE HEADER -->
+    <div style="margin-bottom:1.5rem;">
+      <div class="page-title">Scenario Simulator</div>
+      <div class="page-subtitle">
+        Adjust the sliders to build a custom scenario — or drag the
+        <span style="color:var(--gold);font-weight:600;">↕ gold goal line</span>
+        on the chart to reverse-engineer what you need to reach a target.
+      </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="sim-layout">
+
+      <!-- ══ LEFT: Controls ══════════════════════════════════ -->
+      <div>
+
+        <!-- Preset scenarios -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="section-title" style="margin-bottom:0.9rem;">Quick scenarios</div>
+          <div class="preset-grid">
+            <button class="preset-btn" data-preset="contrib100">
+              <span class="preset-title">$100/mo · 3 yrs</span>
+              <span class="preset-desc">Small regular contribution</span>
+            </button>
+            <button class="preset-btn" data-preset="contrib250">
+              <span class="preset-title">$250/mo · 5 yrs</span>
+              <span class="preset-desc">Accelerated growth</span>
+            </button>
+            <button class="preset-btn" data-preset="lowerwr">
+              <span class="preset-title">Lower withdrawal</span>
+              <span class="preset-desc">Drop to 4% / yr</span>
+            </button>
+            <button class="preset-btn" data-preset="boostreturn">
+              <span class="preset-title">Bull market</span>
+              <span class="preset-desc">12% annual return</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom sliders -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:1.25rem;">Custom scenario</div>
+
+          <!-- Monthly contribution -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Monthly contribution</span>
+              <span class="slider-value" id="val-contrib">$0 / mo</span>
+            </div>
+            <input type="range" id="sl-contrib" class="slider-green"
+              min="0" max="1000" step="10" value="0" />
+          </div>
+
+          <!-- Duration -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Projection horizon<small>(months)</small></span>
+              <span class="slider-value" id="val-duration">36 mo</span>
+            </div>
+            <input type="range" id="sl-duration" class="slider-green"
+              min="6" max="120" step="6" value="36" />
+          </div>
+
+          <div class="divider-label">
+            <span>rate adjustments</span>
+          </div>
+
+          <!-- Annual return rate -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Annual return rate</span>
+              <span class="slider-value" id="val-return">—</span>
+            </div>
+            <input type="range" id="sl-return"
+              min="1" max="25" step="0.5" value="7" />
+          </div>
+
+          <!-- Withdrawal rate -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <span class="slider-label">Annual withdrawal rate</span>
+              <span class="slider-value" id="val-wr">—</span>
+            </div>
+            <input type="range" id="sl-wr" class="slider-gold"
+              min="1" max="15" step="0.25" value="4" />
+          </div>
+
+          <!-- Sustainability warning -->
+          <div id="sustain-warn" style="display:none;font-size:0.78rem;padding:0.6rem 0.8rem;background:var(--red-dim);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);color:var(--red);margin-bottom:0.75rem;">
+            ⚠ Withdrawal rate ≥ return — portfolio will deplete over time.
+          </div>
+
+          <button class="reset-btn" id="btn-reset-scenario">↺ Reset to my current settings</button>
+        </div>
+
+      </div>
+
+      <!-- ══ RIGHT: Chart ════════════════════════════════════ -->
+      <div class="card">
+
+        <!-- Legend -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+          <div class="chart-legend">
+            <span class="legend-item">
+              <span class="legend-dash" style="border-color:rgba(79,110,247,0.5);"></span>
+              Current (no change)
+            </span>
+            <span class="legend-item">
+              <span class="legend-line" style="background:var(--green);"></span>
+              Scenario
+            </span>
+            <span class="legend-item">
+              <span class="legend-line" style="background:var(--gold);opacity:0.8;"></span>
+              <span style="color:var(--gold);">Goal line — drag ↕</span>
+            </span>
+          </div>
+          <span id="horizon-label" style="font-size:0.75rem;color:var(--text-muted);">36 months</span>
+        </div>
+
+        <!-- Chart canvas -->
+        <div class="sim-chart-wrap">
+          <canvas id="sim-chart"></canvas>
+        </div>
+
+        <!-- Goal line readout -->
+        <div class="goal-readout" id="goal-readout">
+          <span class="goal-icon">↕</span>
+          <span id="goal-text">Drag the gold line on the chart to set a portfolio target</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- IMPACT SUMMARY CARDS -->
+    <div class="impact-grid" id="impact-grid">
+      <div class="impact-card" style="--impact-color: var(--accent);">
+        <div class="impact-label">Portfolio at End</div>
+        <div class="impact-row">
+          <span class="impact-before" id="imp-port-before">—</span>
+          <span class="impact-arrow">→</span>
+          <span class="impact-after" id="imp-port-after" style="color:var(--accent);">—</span>
+        </div>
+        <span class="impact-delta neu" id="imp-port-delta">—</span>
+      </div>
+
+      <div class="impact-card" style="--impact-color: var(--green);">
+        <div class="impact-label">Monthly Income Then</div>
+        <div class="impact-row">
+          <span class="impact-before" id="imp-inc-before">—</span>
+          <span class="impact-arrow">→</span>
+          <span class="impact-after" id="imp-inc-after" style="color:var(--green);">—</span>
+        </div>
+        <span class="impact-delta neu" id="imp-inc-delta">—</span>
+      </div>
+
+      <div class="impact-card" style="--impact-color: var(--gold);">
+        <div class="impact-label">Total You'll Contribute</div>
+        <div class="impact-row">
+          <span class="impact-after" id="imp-total-contrib" style="color:var(--gold);">—</span>
+        </div>
+        <div class="impact-sub" id="imp-contrib-sub">vs income earned over same period</div>
+        <span class="impact-delta neu" id="imp-contrib-ratio">—</span>
+      </div>
+
+      <div class="impact-card" style="--impact-color: var(--green);">
+        <div class="impact-label">Sustainability</div>
+        <div class="impact-after" id="imp-sustain" style="font-size:0.95rem;">—</div>
+        <div class="impact-sub" id="imp-sustain-sub" style="margin-top:0.4rem;">—</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/state.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/demo.js"></script>
+  <script>
+  'use strict';
+
+  if (!Utils.guardSetup()) { /* redirected */ }
+
+  const state = AppState.get();
+
+  // Show demo badge
+  if (state.transactions?.[0]?.id === 'rachel1001') {
+    document.getElementById('demo-badge').style.display = 'inline-flex';
+  }
+
+  // ── SCENARIO PARAMETERS ──────────────────────────────────
+  let sp = {
+    monthlyContrib: 0,
+    duration:       36,
+    annualReturn:   state.setup.annualReturn,
+    withdrawalRate: state.setup.withdrawalRate,
+  };
+
+  // ── GOAL LINE ─────────────────────────────────────────────
+  let goalValue     = state.portfolio.value * 1.6;
+  let goalPixelY    = 0;   // in CSS/chart-space pixels
+  let isDragging    = false;
+  let activePreset  = null;
+
+  // ── MATH HELPERS ─────────────────────────────────────────
+  function monthlyGrowthRate(annualPct) {
+    return Math.pow(1 + annualPct / 100, 1 / 12) - 1;
+  }
+
+  // Simulate N months from current portfolio value with optional monthly contribution
+  // Matches the app's simulation.js math exactly
+  function runProjection(annualReturn, withdrawalRate, monthlyContrib, months) {
+    const mg  = monthlyGrowthRate(annualReturn);
+    const mwr = withdrawalRate / 100 / 12;
+    const values = [state.portfolio.value];
+    let v = state.portfolio.value;
+    for (let m = 1; m <= months; m++) {
+      v += monthlyContrib;
+      const payout = v * mwr;
+      v = Math.max(0, v * (1 + mg) - payout);
+      values.push(v);
+    }
+    return values;
+  }
+
+  // Monthly contribution needed to reach target T in n months
+  function neededContrib(targetValue, months) {
+    const mg  = monthlyGrowthRate(sp.annualReturn);
+    const mwr = sp.withdrawalRate / 100 / 12;
+    const rs  = 1 + mg - mwr;          // simplified net factor
+
+    if (months <= 0 || rs <= 0) return null;
+
+    const baseEnd = state.portfolio.value * Math.pow(rs, months);
+    if (targetValue <= baseEnd) return 0; // already achievable without contributions
+
+    if (Math.abs(rs - 1) < 1e-10) {
+      return (targetValue - baseEnd) / months;
+    }
+    const c = (targetValue - baseEnd) * (rs - 1) / (rs * (Math.pow(rs, months) - 1));
+    return c < 0 ? 0 : c;
+  }
+
+  // ── CHART SETUP ──────────────────────────────────────────
+  // Goal line drawn as a Chart.js plugin
+  const goalLinePlugin = {
+    id: 'goalLine',
+    afterDraw(chart) {
+      const ctx  = chart.ctx;
+      const { top, bottom, left, right } = chart.chartArea;
+      const yScale = chart.scales.y;
+
+      goalPixelY = yScale.getPixelForValue(goalValue);
+
+      // Clamp drawing to chart area
+      const clampedY = Math.max(top, Math.min(bottom, goalPixelY));
+      const outOfRange = goalPixelY < top - 2 || goalPixelY > bottom + 2;
+
+      ctx.save();
+
+      // Dashed horizontal line
+      ctx.setLineDash([8, 5]);
+      ctx.strokeStyle = isDragging ? 'rgba(252,211,77,0.95)' : 'rgba(245,158,11,0.6)';
+      ctx.lineWidth   = isDragging ? 2.5 : 1.8;
+      ctx.beginPath();
+      ctx.moveTo(left, clampedY);
+      ctx.lineTo(right - 26, clampedY);
+      ctx.stroke();
+
+      // Handle circle (right side)
+      ctx.setLineDash([]);
+      ctx.shadowColor = isDragging ? 'rgba(245,158,11,0.55)' : 'transparent';
+      ctx.shadowBlur  = isDragging ? 10 : 0;
+      ctx.fillStyle   = isDragging ? '#fcd34d' : '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(right - 13, clampedY, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ↕ icon in handle
+      ctx.shadowBlur    = 0;
+      ctx.fillStyle     = 'rgba(0,0,0,0.75)';
+      ctx.font          = 'bold 9px sans-serif';
+      ctx.textAlign     = 'center';
+      ctx.textBaseline  = 'middle';
+      ctx.fillText('↕', right - 13, clampedY);
+
+      // Goal label (above line if in range)
+      if (!outOfRange) {
+        ctx.fillStyle    = isDragging ? '#fcd34d' : 'rgba(245,158,11,0.85)';
+        ctx.font         = '600 10.5px Inter, sans-serif';
+        ctx.textAlign    = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Goal: ' + Utils.fmtCompact(goalValue), left + 8, clampedY - 5);
+      }
+
+      ctx.restore();
+    },
+  };
+
+  let simChart = null;
+
+  function buildChartData() {
+    const baseVals = runProjection(
+      state.setup.annualReturn, state.setup.withdrawalRate, 0, sp.duration
+    );
+    const scenVals = runProjection(
+      sp.annualReturn, sp.withdrawalRate, sp.monthlyContrib, sp.duration
+    );
+
+    const labels = Array.from({ length: sp.duration + 1 }, (_, i) =>
+      i === 0 ? 'Now' : `M${i}`
+    );
+
+    const gradBlue  = (ctx) => {
+      const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 340);
+      g.addColorStop(0, 'rgba(79,110,247,0.08)');
+      g.addColorStop(1, 'rgba(79,110,247,0)');
+      return g;
+    };
+    const gradGreen = (ctx) => {
+      const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 340);
+      g.addColorStop(0, 'rgba(34,197,94,0.18)');
+      g.addColorStop(1, 'rgba(34,197,94,0)');
+      return g;
+    };
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Current (no change)',
+          data: baseVals,
+          borderColor: 'rgba(79,110,247,0.45)',
+          backgroundColor: gradBlue,
+          borderDash: [6, 4],
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 1.8,
+        },
+        {
+          label: 'Scenario',
+          data: scenVals,
+          borderColor: '#22c55e',
+          backgroundColor: gradGreen,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          borderWidth: 2.5,
+        },
+      ],
+    };
+  }
+
+  function buildChartOptions() {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 200 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(16,23,38,0.97)',
+          borderColor: 'rgba(30,38,64,0.8)',
+          borderWidth: 1,
+          padding: 11,
+          callbacks: {
+            title: (items) => {
+              const m = items[0].dataIndex;
+              return m === 0 ? 'Today' : `Month ${m}`;
+            },
+            label: (ctx) => {
+              const v = ctx.parsed.y;
+              const payout = Simulation.calcMonthlyPayout(v, sp.withdrawalRate);
+              return ` ${ctx.dataset.label}: ${Utils.fmt(v)}  (${Utils.fmt(payout)}/mo income)`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(28,38,64,0.5)', drawBorder: false },
+          ticks: {
+            color: '#4a5878', font: { size: 10 },
+            maxTicksLimit: 13,
+            callback: (_, i) => {
+              if (i === 0) return 'Now';
+              if (i % 6 === 0) return `M${i}`;
+              return '';
+            },
+          },
+        },
+        y: {
+          grid: { color: 'rgba(28,38,64,0.5)', drawBorder: false },
+          ticks: {
+            color: '#4a5878', font: { size: 10 },
+            callback: (v) => {
+              if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(1) + 'M';
+              if (v >= 1_000)     return '$' + (v / 1_000).toFixed(0) + 'k';
+              return '$' + v.toFixed(0);
+            },
+          },
+        },
+      },
+    };
+  }
+
+  function initChart() {
+    const ctx = document.getElementById('sim-chart').getContext('2d');
+    simChart = new Chart(ctx, {
+      type: 'line',
+      data: buildChartData(),
+      options: buildChartOptions(),
+      plugins: [goalLinePlugin],
+    });
+  }
+
+  function updateChart() {
+    if (!simChart) return;
+    simChart.data    = buildChartData();
+    simChart.options = buildChartOptions();
+    simChart.update('none');
+    updateGoalReadout();
+    updateImpactCards();
+    document.getElementById('horizon-label').textContent = sp.duration + ' months';
+    checkSustainWarn();
+  }
+
+  // ── GOAL LINE DRAGGING ───────────────────────────────────
+  function updateGoalReadout() {
+    const months = sp.duration;
+    const c = neededContrib(goalValue, months);
+    const baseEnd   = runProjection(state.setup.annualReturn, state.setup.withdrawalRate, 0, months);
+    const baseValue = baseEnd[baseEnd.length - 1];
+    const goalText  = document.getElementById('goal-text');
+
+    if (c === null || c === undefined) {
+      goalText.textContent = 'Drag the gold line to set a target portfolio value.';
+      return;
+    }
+    if (c === 0) {
+      const surplus = baseValue - goalValue;
+      goalText.innerHTML =
+        `<strong style="color:var(--green)">✓ Already on track!</strong>  ` +
+        `Your current trajectory reaches <strong>${Utils.fmt(baseValue)}</strong> in ${months} months ` +
+        `— ${Utils.fmt(surplus)} above your goal.`;
+    } else {
+      const monthlyIncomeThen = Simulation.calcMonthlyPayout(goalValue, sp.withdrawalRate);
+      goalText.innerHTML =
+        `To reach <strong>${Utils.fmt(goalValue)}</strong> in ${months} months — ` +
+        `contribute <strong style="color:var(--green)">${Utils.fmt(c)}/mo</strong>. ` +
+        `Monthly income would be <strong style="color:var(--accent)">${Utils.fmt(monthlyIncomeThen)}/mo</strong>.`;
+    }
+  }
+
+  function initGoalDrag() {
+    const canvas = document.getElementById('sim-chart');
+
+    function isNearLine(clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const cssY  = clientY - rect.top;
+      const { top, bottom } = simChart.chartArea;
+      return cssY >= top && cssY <= bottom && Math.abs(cssY - goalPixelY) < 18;
+    }
+
+    function updateFromClientY(clientY) {
+      const rect   = canvas.getBoundingClientRect();
+      const cssY   = clientY - rect.top;
+      const yScale = simChart.scales.y;
+      const { top, bottom } = simChart.chartArea;
+      const clampedCssY = Math.max(top, Math.min(bottom, cssY));
+      goalValue = Math.max(0, yScale.getValueForPixel(clampedCssY));
+      simChart.update('none');
+      updateGoalReadout();
+    }
+
+    // Mouse
+    canvas.addEventListener('mousedown', (e) => {
+      if (isNearLine(e.clientY)) { isDragging = true; e.preventDefault(); }
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        updateFromClientY(e.clientY);
+      } else {
+        canvas.style.cursor = isNearLine(e.clientY) ? 'ns-resize' : 'default';
+      }
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Touch
+    canvas.addEventListener('touchstart', (e) => {
+      if (isNearLine(e.touches[0].clientY)) {
+        isDragging = true; e.preventDefault();
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+      if (isDragging) {
+        updateFromClientY(e.touches[0].clientY);
+        e.preventDefault();
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { isDragging = false; });
+  }
+
+  // ── SLIDERS ──────────────────────────────────────────────
+  function setSliderFill(el) {
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    const val = parseFloat(el.value);
+    el.style.setProperty('--fill', ((val - min) / (max - min) * 100).toFixed(1) + '%');
+  }
+
+  function setSliderValue(id, val) {
+    const el = document.getElementById(id);
+    el.value = val;
+    setSliderFill(el);
+  }
+
+  function initSliders() {
+    // Set initial values from current state
+    setSliderValue('sl-return', sp.annualReturn);
+    setSliderValue('sl-wr',     sp.withdrawalRate);
+    setSliderValue('sl-contrib', 0);
+    setSliderValue('sl-duration', 36);
+
+    document.getElementById('val-return').textContent = sp.annualReturn + '%';
+    document.getElementById('val-wr').textContent     = sp.withdrawalRate + '%';
+    document.getElementById('val-contrib').textContent = '$0 / mo';
+    document.getElementById('val-duration').textContent = '36 mo';
+
+    function bind(sliderId, labelId, format, paramKey) {
+      const slider = document.getElementById(sliderId);
+      slider.addEventListener('input', () => {
+        setSliderFill(slider);
+        const v = parseFloat(slider.value);
+        document.getElementById(labelId).textContent = format(v);
+        sp[paramKey] = v;
+        clearActivePreset();
+        updateChart();
+      });
+    }
+
+    bind('sl-contrib',  'val-contrib',  v => v === 0 ? '$0 / mo' : `$${v} / mo`,   'monthlyContrib');
+    bind('sl-duration', 'val-duration', v => `${v} mo`,  'duration');
+    bind('sl-return',   'val-return',   v => `${v}%`,    'annualReturn');
+    bind('sl-wr',       'val-wr',       v => `${v}%`,    'withdrawalRate');
+  }
+
+  function checkSustainWarn() {
+    document.getElementById('sustain-warn').style.display =
+      sp.withdrawalRate >= sp.annualReturn ? 'block' : 'none';
+  }
+
+  // ── PRESETS ──────────────────────────────────────────────
+  const PRESETS = {
+    contrib100:  { monthlyContrib: 100, duration: 36,  annualReturn: state.setup.annualReturn, withdrawalRate: state.setup.withdrawalRate },
+    contrib250:  { monthlyContrib: 250, duration: 60,  annualReturn: state.setup.annualReturn, withdrawalRate: state.setup.withdrawalRate },
+    lowerwr:     { monthlyContrib: 0,   duration: 36,  annualReturn: state.setup.annualReturn, withdrawalRate: 4                         },
+    boostreturn: { monthlyContrib: 0,   duration: 36,  annualReturn: 12,                       withdrawalRate: state.setup.withdrawalRate },
+  };
+
+  function applyPreset(key) {
+    const p = PRESETS[key];
+    if (!p) return;
+    sp = { ...p };
+
+    setSliderValue('sl-contrib',  p.monthlyContrib);
+    setSliderValue('sl-duration', p.duration);
+    setSliderValue('sl-return',   p.annualReturn);
+    setSliderValue('sl-wr',       p.withdrawalRate);
+
+    document.getElementById('val-contrib').textContent  = p.monthlyContrib === 0 ? '$0 / mo' : `$${p.monthlyContrib} / mo`;
+    document.getElementById('val-duration').textContent = `${p.duration} mo`;
+    document.getElementById('val-return').textContent   = `${p.annualReturn}%`;
+    document.getElementById('val-wr').textContent       = `${p.withdrawalRate}%`;
+
+    activePreset = key;
+    document.querySelectorAll('.preset-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.preset === key)
+    );
+
+    updateChart();
+  }
+
+  function clearActivePreset() {
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+  });
+
+  document.getElementById('btn-reset-scenario').addEventListener('click', () => {
+    sp = {
+      monthlyContrib: 0,
+      duration: 36,
+      annualReturn:   state.setup.annualReturn,
+      withdrawalRate: state.setup.withdrawalRate,
+    };
+    setSliderValue('sl-contrib',  0);
+    setSliderValue('sl-duration', 36);
+    setSliderValue('sl-return',   sp.annualReturn);
+    setSliderValue('sl-wr',       sp.withdrawalRate);
+
+    document.getElementById('val-contrib').textContent  = '$0 / mo';
+    document.getElementById('val-duration').textContent = '36 mo';
+    document.getElementById('val-return').textContent   = `${sp.annualReturn}%`;
+    document.getElementById('val-wr').textContent       = `${sp.withdrawalRate}%`;
+
+    clearActivePreset();
+    updateChart();
+    Utils.toast('Reset to current portfolio settings', 'info');
+  });
+
+  // ── IMPACT CARDS ─────────────────────────────────────────
+  function updateImpactCards() {
+    const months = sp.duration;
+
+    const baseVals = runProjection(state.setup.annualReturn, state.setup.withdrawalRate, 0, months);
+    const scenVals = runProjection(sp.annualReturn, sp.withdrawalRate, sp.monthlyContrib, months);
+
+    const baseEnd = baseVals[baseVals.length - 1];
+    const scenEnd = scenVals[scenVals.length - 1];
+
+    const baseIncome = Simulation.calcMonthlyPayout(baseEnd, state.setup.withdrawalRate);
+    const scenIncome = Simulation.calcMonthlyPayout(scenEnd, sp.withdrawalRate);
+
+    const totalContributed = sp.monthlyContrib * months;
+    const totalIncomeEarned = scenVals.slice(1).reduce((sum, v, i) => {
+      return sum + Simulation.calcMonthlyPayout(scenVals[i], sp.withdrawalRate);
+    }, 0);
+
+    const portDelta  = scenEnd - baseEnd;
+    const incDelta   = scenIncome - baseIncome;
+    const sustainable = sp.withdrawalRate < sp.annualReturn;
+
+    // Portfolio
+    document.getElementById('imp-port-before').textContent = Utils.fmt(baseEnd);
+    document.getElementById('imp-port-after').textContent  = Utils.fmt(scenEnd);
+    const portDeltaEl = document.getElementById('imp-port-delta');
+    portDeltaEl.textContent = (portDelta >= 0 ? '+' : '') + Utils.fmt(portDelta);
+    portDeltaEl.className = 'impact-delta ' + (portDelta > 0 ? 'pos' : portDelta < 0 ? 'neg' : 'neu');
+
+    // Income
+    document.getElementById('imp-inc-before').textContent = Utils.fmt(baseIncome) + '/mo';
+    document.getElementById('imp-inc-after').textContent  = Utils.fmt(scenIncome) + '/mo';
+    const incDeltaEl = document.getElementById('imp-inc-delta');
+    incDeltaEl.textContent = (incDelta >= 0 ? '+' : '') + Utils.fmt(incDelta) + '/mo';
+    incDeltaEl.className = 'impact-delta ' + (incDelta > 0 ? 'pos' : incDelta < 0 ? 'neg' : 'neu');
+
+    // Total contributed
+    document.getElementById('imp-total-contrib').textContent = Utils.fmt(totalContributed);
+    document.getElementById('imp-contrib-sub').textContent   =
+      totalContributed === 0
+        ? 'No additional contributions in this scenario'
+        : `vs ${Utils.fmt(totalIncomeEarned)} income earned`;
+    const ratioEl = document.getElementById('imp-contrib-ratio');
+    if (totalContributed > 0) {
+      const multiple = totalIncomeEarned / Math.max(totalContributed, 0.01);
+      ratioEl.textContent = `${multiple.toFixed(1)}× return on contributions`;
+      ratioEl.className   = 'impact-delta ' + (multiple >= 1 ? 'pos' : 'neg');
+    } else {
+      ratioEl.textContent = 'Zero extra contributions';
+      ratioEl.className   = 'impact-delta neu';
+    }
+
+    // Sustainability
+    const sustainEl    = document.getElementById('imp-sustain');
+    const sustainSubEl = document.getElementById('imp-sustain-sub');
+    if (sustainable) {
+      sustainEl.textContent    = '✓ Sustainable';
+      sustainEl.style.color    = 'var(--green)';
+      sustainSubEl.textContent = `${(sp.annualReturn - sp.withdrawalRate).toFixed(1)}% net growth after payouts`;
+    } else {
+      sustainEl.textContent    = '⚠ Will deplete';
+      sustainEl.style.color    = 'var(--red)';
+      sustainSubEl.textContent = 'Withdrawal exceeds expected return';
+    }
+  }
+
+  // ── INIT ─────────────────────────────────────────────────
+  initChart();
+  initSliders();
+  initGoalDrag();
+  updateChart();
+  </script>
+</body>
+</html>
