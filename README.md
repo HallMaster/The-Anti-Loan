@@ -8,9 +8,9 @@ The application can be viewed here: https://hallmaster.github.io/The-Anti-Loan/
 
 > **Everyone can cash flow.**
 
-A proof-of-concept web app that simulates investing a lump sum and collecting a monthly income from it — sustainably, potentially forever. Access the app can be accessed here: https://hallmaster.github.io/The-Anti-Loan/
+A proof-of-concept web app that simulates investing a lump sum and collecting a monthly income from it — sustainably, potentially forever.
 
-Instead of borrowing money and paying interest, you invest money and *receive* interest. Set your withdrawal rate below your expected market return, and your portfolio can pay you indefinitely.
+This investment software is aimed primarily at high schoolers and younger adults who may not have learned good money principles. It is supposed to incentivize investing your money by clearly showing how invested money “pays” you. Instead of taking out loans to pay for things you might not need––like brand-new couches, expensive clothes, or even UberEats––invest that money and let it pay you!
 
 ---
 
